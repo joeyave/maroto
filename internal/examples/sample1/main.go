@@ -1,9 +1,8 @@
 package main
 
 import (
-	"encoding/base64"
+	"bytes"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"strconv"
 	"time"
@@ -18,9 +17,9 @@ func main() {
 	begin := time.Now()
 	m := pdf.NewMaroto(consts.Portrait, consts.A4)
 	m.SetPageMargins(10, 15, 10)
-	// m.SetBorder(true)
+	m.SetBorder(true)
 
-	byteSlices, err := ioutil.ReadFile("internal/assets/images/biplane.jpg")
+	byteSlices, err := os.ReadFile("internal/assets/images/biplane.jpg")
 	if err != nil {
 		fmt.Println("Got error while opening file:", err)
 		os.Exit(1)
@@ -29,7 +28,7 @@ func main() {
 	headerSmall, smallContent := getSmallContent()
 	headerMedium, mediumContent := getMediumContent()
 
-	base64image := base64.StdEncoding.EncodeToString(byteSlices)
+	//base64image := base64.StdEncoding.EncodeToString(byteSlices)
 
 	m.SetAliasNbPages("{nb}")
 	m.SetFirstPageNb(1)
@@ -37,9 +36,10 @@ func main() {
 	m.RegisterHeader(func() {
 		m.Row(20, func() {
 			m.Col(3, func() {
-				_ = m.Base64Image(base64image, consts.Jpg, props.Rect{
-					Center:  true,
-					Percent: 70,
+				_ = m.ReaderImage(bytes.NewReader(byteSlices), consts.Jpg, props.Rect{
+					Center:      true,
+					Percent:     70,
+					RotateAngle: 270,
 				})
 			})
 

@@ -42,6 +42,8 @@ type Rect struct {
 	Percent float64
 	// Center define that the barcode will be vertically and horizontally centralized.
 	Center bool
+
+	RotateAngle int
 }
 
 // Text represents properties from a Text inside a cell.

@@ -2,6 +2,7 @@ package pdf
 
 import (
 	"bytes"
+	"io"
 
 	"github.com/johnfercher/maroto/internal/fpdf"
 	"github.com/johnfercher/maroto/pkg/color"
@@ -38,6 +39,7 @@ type Maroto interface {
 	Text(text string, prop ...props.Text)
 	FileImage(filePathName string, prop ...props.Rect) (err error)
 	Base64Image(base64 string, extension consts.Extension, prop ...props.Rect) (err error)
+	ReaderImage(r io.Reader, extension consts.Extension, prop ...props.Rect) (err error)
 	Barcode(code string, prop ...props.Barcode) error
 	QrCode(code string, prop ...props.Rect)
 	DataMatrixCode(code string, prop ...props.Rect)
@@ -48,6 +50,9 @@ type Maroto interface {
 	Output() (bytes.Buffer, error)
 
 	// Helpers
+	TransformBegin()
+	TransformEnd()
+	TransformRotate(angle, x, y float64)
 	AddPage()
 	SetBorder(on bool)
 	SetBackgroundColor(color color.Color)
@@ -187,6 +192,18 @@ func (s *PdfMaroto) AddPage() {
 	s.Row(float64(maxOffsetPage-totalOffsetY), func() {
 		s.ColSpace(uint(consts.MaxGridSum))
 	})
+}
+
+func (s *PdfMaroto) TransformBegin() {
+	s.Pdf.TransformBegin()
+}
+
+func (s *PdfMaroto) TransformEnd() {
+	s.Pdf.TransformEnd()
+}
+
+func (s *PdfMaroto) TransformRotate(angle, x, y float64) {
+	s.Pdf.TransformRotate(angle, x, y)
 }
 
 // RegisterHeader define a sequence of Rows, Lines ou TableLists
@@ -503,6 +520,26 @@ func (s *PdfMaroto) Base64Image(base64 string, extension consts.Extension, prop 
 	}
 
 	return s.Image.AddFromBase64(base64, cell, rectProp, extension)
+}
+
+// ReaderImage add an Image reading byte slices inside a cell.
+// Defining Image properties.
+func (s *PdfMaroto) ReaderImage(r io.Reader, extension consts.Extension, prop ...props.Rect) error {
+	rectProp := props.Rect{}
+	if len(prop) > 0 {
+		rectProp = prop[0]
+	}
+
+	rectProp.MakeValid()
+
+	cell := internal.Cell{
+		X:      s.xColOffset,
+		Y:      s.offsetY + rectProp.Top,
+		Width:  s.colWidth,
+		Height: s.rowHeight,
+	}
+
+	return s.Image.AddFromReader(r, cell, rectProp, extension)
 }
 
 // Barcode create an barcode inside a cell.
