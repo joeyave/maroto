@@ -99,12 +99,12 @@ func (s *image) addImageToPdf(imageLabel string, info *gofpdf.ImageInfoType, cel
 	} else {
 		x, y, w, h = s.math.GetRectNonCenterColProperties(info.Width(), info.Height(), cell.Width, cell.Height, cell.X, prop)
 	}
-	if prop.RotateAngle != 0 {
+	if prop.RotationAngle != 0 {
 		xDelta := 0.
 		yDelta := 0.
 		finalW := w
 		finalH := h
-		if prop.RotateAngle == 90 || prop.RotateAngle == 270 {
+		if prop.RotationAngle == 90 || prop.RotationAngle == 270 {
 			var _, _, rotatedW, rotatedH float64
 			if prop.Center {
 				_, _, rotatedW, rotatedH = s.math.GetRectCenterColProperties(info.Height(), info.Width(), cell.Width, cell.Height, cell.X, prop.Percent)
@@ -119,7 +119,7 @@ func (s *image) addImageToPdf(imageLabel string, info *gofpdf.ImageInfoType, cel
 		centerX := x + w/2
 		centerY := y + h/2 + cell.Y
 		s.pdf.TransformBegin()
-		s.pdf.TransformRotate(float64(prop.RotateAngle), centerX, centerY)
+		s.pdf.TransformRotate(float64(prop.RotationAngle), centerX, centerY)
 		s.pdf.ImageOptions(imageLabel, x+xDelta, y+cell.Y+yDelta, finalW, finalH, false, gofpdf.ImageOptions{
 			AllowNegativePosition: true,
 		}, 0, "")

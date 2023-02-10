@@ -37,9 +37,9 @@ func main() {
 		m.Row(20, func() {
 			m.Col(3, func() {
 				_ = m.ReaderImage(bytes.NewReader(byteSlices), consts.Jpg, props.Rect{
-					Center:      true,
-					Percent:     70,
-					RotateAngle: 270,
+					Center:        true,
+					Percent:       70,
+					RotationAngle: 270,
 				})
 			})
 
