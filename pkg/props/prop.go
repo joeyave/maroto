@@ -132,8 +132,6 @@ type TableList struct {
 	Line bool
 	// LineProp is the custom properties of the line separating the rows
 	LineProp Line
-
-	CPEncoding string
 }
 
 // MakeValid from Rect will make the properties from a rectangle reliable to fit inside a cell

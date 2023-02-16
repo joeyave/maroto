@@ -73,7 +73,7 @@ func (s *tableList) Create(header []string, contents [][]string, defaultFontFami
 	}
 
 	tableProp.MakeValid(header, defaultFontFamily)
-	headerHeight := s.calcLinesHeight(header, tableProp.HeaderProp, tableProp.Align, tableProp.CPEncoding)
+	headerHeight := s.calcLinesHeight(header, tableProp.HeaderProp, tableProp.Align)
 
 	// Draw header.
 	s.pdf.Row(headerHeight+1, func() {
@@ -94,7 +94,7 @@ func (s *tableList) Create(header []string, contents [][]string, defaultFontFami
 
 	// Draw contents.
 	for index, content := range contents {
-		contentHeight := s.calcLinesHeight(content, tableProp.ContentProp, tableProp.Align, tableProp.CPEncoding)
+		contentHeight := s.calcLinesHeight(content, tableProp.ContentProp, tableProp.Align)
 		contentHeightPadded := contentHeight + tableProp.VerticalContentPadding
 
 		if tableProp.AlternatedBackground != nil && index%2 == 0 {
@@ -121,7 +121,7 @@ func (s *tableList) Create(header []string, contents [][]string, defaultFontFami
 	}
 }
 
-func (s *tableList) calcLinesHeight(textList []string, contentProp props.TableListContent, align consts.Align, cpStr string) float64 {
+func (s *tableList) calcLinesHeight(textList []string, contentProp props.TableListContent, align consts.Align) float64 {
 	maxLines := 1.0
 
 	left, _, right, _ := s.pdf.GetPageMargins()
@@ -134,7 +134,7 @@ func (s *tableList) calcLinesHeight(textList []string, contentProp props.TableLi
 		gridSize := float64(contentProp.GridSizes[i])
 		percentSize := gridSize / consts.MaxGridSum
 		colWidth := usefulWidth * percentSize
-		qtdLines := float64(s.text.GetLinesQuantity(text, textProp, colWidth, cpStr))
+		qtdLines := float64(s.text.GetLinesQuantity(text, textProp, colWidth))
 		if qtdLines > maxLines {
 			maxLines = qtdLines
 		}
