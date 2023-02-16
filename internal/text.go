@@ -69,11 +69,12 @@ func (s *text) Add(text string, cell Cell, textProp props.Text) {
 
 // GetLinesQuantity retrieve the quantity of lines which a text will occupy to avoid that text to extrapolate a cell.
 func (s *text) GetLinesQuantity(text string, textProp props.Text, colWidth float64) int {
-	translator := s.pdf.UnicodeTranslatorFromDescriptor("")
+	//translator := s.pdf.UnicodeTranslatorFromDescriptor("")
 	s.font.SetFont(textProp.Family, textProp.Style, textProp.Size)
 
 	// Apply Unicode.
-	textTranslated := translator(text)
+	//textTranslated := translator(text)
+	textTranslated := text
 
 	stringWidth := s.pdf.GetStringWidth(textTranslated)
 	words := strings.Split(textTranslated, " ")
