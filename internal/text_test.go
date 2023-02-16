@@ -34,7 +34,7 @@ func TestText_GetLinesQuantity_WhenStringSmallerThanLimits(t *testing.T) {
 	sut := internal.NewText(pdf, nil, font)
 
 	// Act
-	lines := sut.GetLinesQuantity("AnyText With Spaces", props.Text{}, 2)
+	lines := sut.GetLinesQuantity("AnyText With Spaces", props.Text{}, 2, "")
 
 	// Assert
 	assert.Equal(t, lines, 4)
@@ -54,7 +54,7 @@ func TestText_GetLinesQuantity_WhenHasOneWord(t *testing.T) {
 	sut := internal.NewText(pdf, nil, font)
 
 	// Act
-	lines := sut.GetLinesQuantity("OneWord", props.Text{}, 2)
+	lines := sut.GetLinesQuantity("OneWord", props.Text{}, 2, "")
 
 	// Assert
 	assert.Equal(t, lines, 1)
@@ -74,7 +74,7 @@ func TestText_GetLinesQuantity_WhenExtrapolate(t *testing.T) {
 	sut := internal.NewText(pdf, nil, font)
 
 	// Act
-	lines := sut.GetLinesQuantity("Many words", props.Text{Extrapolate: true}, 2)
+	lines := sut.GetLinesQuantity("Many words", props.Text{Extrapolate: true}, 2, "")
 
 	// Assert
 	assert.Equal(t, lines, 1)
@@ -97,7 +97,7 @@ func TestText_GetLinesQuantity_WhenHasToBreakLines(t *testing.T) {
 	sut := internal.NewText(pdf, math, font)
 
 	// Act
-	lines := sut.GetLinesQuantity("Many words", props.Text{}, 2)
+	lines := sut.GetLinesQuantity("Many words", props.Text{}, 2, "")
 
 	// Assert
 	assert.Equal(t, lines, 3)
