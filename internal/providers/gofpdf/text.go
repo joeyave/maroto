@@ -80,11 +80,13 @@ func (s *text) Add(text string, cell *entity.Cell, textProp *props.Text) {
 	}
 
 	var lines []string
-
-	if textProp.BreakLineStrategy == breakline.EmptySpaceStrategy {
+	switch textProp.BreakLineStrategy {
+	case breakline.EmptySpaceStrategy:
 		words := strings.Split(unicodeText, " ")
 		lines = s.getLinesBreakingLineFromSpace(words, width)
-	} else {
+	case breakline.CharacterStrategy:
+		lines = s.getLinesBreakingLineByCharacter(unicodeText, width)
+	default:
 		lines = s.getLinesBreakingLineWithDash(unicodeText, width)
 	}
 
@@ -108,9 +110,12 @@ func (s *text) GetLinesQuantity(text string, textProp *props.Text, colWidth floa
 
 	textTranslated := s.textToUnicode(text, textProp)
 
-	if textProp.BreakLineStrategy == breakline.DashStrategy {
+	switch textProp.BreakLineStrategy {
+	case breakline.DashStrategy:
 		return len(s.getLinesBreakingLineWithDash(text, colWidth))
-	} else {
+	case breakline.CharacterStrategy:
+		return len(s.getLinesBreakingLineByCharacter(text, colWidth))
+	default:
 		return len(s.getLinesBreakingLineFromSpace(strings.Split(textTranslated, " "), colWidth))
 	}
 }
@@ -155,6 +160,36 @@ func (s *text) getLinesBreakingLineWithDash(words string, colWidth float64) []st
 
 		letterString := fmt.Sprintf("%c", letter)
 		width := s.pdf.GetStringWidth(letterString)
+		content += letterString
+		currentlySize += width
+	}
+
+	if content != "" {
+		lines = append(lines, content)
+	}
+
+	return lines
+}
+
+func (s *text) getLinesBreakingLineByCharacter(words string, colWidth float64) []string {
+	currentlySize := 0.0
+	lines := []string{}
+	var content string
+
+	for _, letter := range words {
+		letterString := fmt.Sprintf("%c", letter)
+		width := s.pdf.GetStringWidth(letterString)
+
+		if currentlySize+width > colWidth {
+			lines = append(lines, content)
+			content = ""
+			currentlySize = 0
+			// Skip space if it would be at the start of a new line
+			if letterString == " " {
+				continue
+			}
+		}
+
 		content += letterString
 		currentlySize += width
 	}
