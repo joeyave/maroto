@@ -17,13 +17,13 @@ github.com/hhrutter/tiff v1.0.2/go.mod h1:pcOeuK5loFUE7Y/WnzGw20YxUdnqjY1P0Jlcie
 github.com/johnfercher/go-tree v1.1.0 h1:L0Fs5jLR1uA2e/CwfHjNdO/Lt4IGQ46QgxarAC1yeXs=
 github.com/johnfercher/go-tree v1.1.0/go.mod h1:DUO6QkXIFh1K7jeGBIkLCZaeUgnkdQAsB64FDSoHswg=
 github.com/jung-kurt/gofpdf v1.0.0/go.mod h1:7Id9E/uU8ce6rXgefFLlgrJj/GYY22cpxn+r32jIOes=
-github.com/jung-kurt/gofpdf v1.16.2 h1:jgbatWHfRlPYiK85qgevsZTHviWXKwB1TTiKdz5PtRc=
-github.com/jung-kurt/gofpdf v1.16.2/go.mod h1:1hl7y57EsiPAkLbOwzpzqgx1A30nQCk/YmFV8S2vmK0=
 github.com/mattn/go-runewidth v0.0.16 h1:E5ScNMtiwvlvB5paMFdw9p4kSQzbXFikJ5SQO6TULQc=
 github.com/mattn/go-runewidth v0.0.16/go.mod h1:Jdepj2loyihRzMpdS35Xk/zdY8IAYHsh153qUoGf23w=
 github.com/pdfcpu/pdfcpu v0.10.1 h1:jkS2Lwkz17OzOH7hGLIhtTjvDJir5AZBCnsRT96xvrg=
 github.com/pdfcpu/pdfcpu v0.10.1/go.mod h1:Q2Z3sqdRqHTdIq1mPAUl8nfAoim8p3c1ASOaQ10mCpE=
-github.com/phpdave11/gofpdi v1.0.7/go.mod h1:vBmVV0Do6hSBHC8uKUQ71JGW+ZGQq74llk/7bXwjDoI=
+github.com/phpdave11/gofpdf v1.4.3 h1:M/zHvS8FO3zh9tUd2RCOPEjyuVcs281FCyF22Qlz/IA=
+github.com/phpdave11/gofpdf v1.4.3/go.mod h1:MAwzoUIgD3J55u0rxIG2eu37c+XWhBtXSpPAhnQXf/o=
+github.com/phpdave11/gofpdi v1.0.15/go.mod h1:vBmVV0Do6hSBHC8uKUQ71JGW+ZGQq74llk/7bXwjDoI=
 github.com/pkg/errors v0.8.1/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=
 github.com/pkg/errors v0.9.1 h1:FEBLx1zS214owpjy7qsBeixbURkuhQAwrK5UwLGTwt4=
 github.com/pkg/errors v0.9.1/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=

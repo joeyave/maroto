@@ -10,7 +10,7 @@
 [![Stars Badge](https://img.shields.io/github/stars/johnfercher/maroto.svg?style=social&label=Stars)](https://github.com/johnfercher/maroto/stargazers)
 
 
-A Maroto way to create PDFs. Maroto is inspired in Bootstrap and uses [Gofpdf](https://github.com/jung-kurt/gofpdf). Fast and simple.
+A Maroto way to create PDFs. Maroto is inspired in Bootstrap and uses [Gofpdf](https://github.com/phpdave11/gofpdf). Fast and simple.
 
 ![sirmaroto](docs/assets/images/logosmall.png)
 > Maroto definition: Brazilian expression, means an astute/clever/intelligent person. 
@@ -20,16 +20,16 @@ You can write your PDFs like you are creating a site using Bootstrap. A Row may 
 Besides that, pages will be added when content may extrapolate the useful area. You can define a header which will be added
 always when a new page appear, in this case, a header may have many rows, lines or tablelist. 
 
-#### Maroto `v2.3.1` is here! Try out:
+#### Maroto `v2.3.3` is here! Try out:
 
 * Installation with`go get`:
 
 ```bash
-go get github.com/johnfercher/maroto/v2@v2.3.1
+go get github.com/johnfercher/maroto/v2@v2.3.3
 ```
 
-* You can see the full `v2` documentation [here](https://maroto.io/).
-* The `v1` still exists in [this branch](https://github.com/johnfercher/maroto/tree/v1), and you can see the doc [here](https://maroto.io/#/v1/README?id=deprecated).
+* You can see the full `v2` documentation [here](https://maroto.tech/#/README?id=maroto-v2).
+* The `v1` still exists in [this branch](https://github.com/johnfercher/maroto/tree/v1), and you can see the doc [here]([https://maroto.io/#/v1/README?id=deprecated](https://maroto.tech/#/v1/README?id=deprecated)).
 
 ![result](docs/assets/images/result.png)
 
