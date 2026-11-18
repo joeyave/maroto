@@ -244,7 +244,9 @@ func (s *Text) addLine(textProp *props.Text, xColOffset, colWidth, yColOffset, t
 		const emptyString = ""
 
 		text = strings.TrimRight(text, spaceString)
-		words := strings.Fields(text)
+		// Only ordinary spaces separate words, like textNotSpaces: a non-breaking space keeps
+		// its words together.
+		words := strings.FieldsFunc(text, func(r rune) bool { return r == ' ' })
 		if len(words) == 0 {
 			return
 		}
