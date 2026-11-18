@@ -557,6 +557,33 @@ func TestDocument_Image(t *testing.T) {
 	})
 }
 
+func TestDocument_Rotate(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	sut := newSut(t, options())
+
+	// Act
+	sut.Rotate(90, 50, 50)
+
+	// Assert
+	pdf := output(t, sut)
+	assert.Contains(t, pdf, "q\n 0.00000 1.00000 -1.00000\n 0.00000")
+	assert.Contains(t, pdf, " cm\n")
+}
+
+func TestDocument_RotateReset(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	sut := newSut(t, options())
+	sut.Rotate(90, 50, 50)
+
+	// Act
+	sut.RotateReset()
+
+	// Assert
+	assert.Contains(t, output(t, sut), " cm\nQ\n")
+}
+
 func TestDocument_SetCompression(t *testing.T) {
 	t.Parallel()
 	t.Run("when compression is enabled, should compress the content streams", func(t *testing.T) {

@@ -1,0 +1,3 @@
+generate -> avg: 2.40ms, executions: [2.40ms]
+add_rows -> avg: 2991.40ns, executions: [14.62μs, 0.12μs, 0.08μs, 0.04μs, 0.08μs]
+file_size -> 51.21Kb

@@ -14,6 +14,7 @@ import (
 
 	"github.com/johnfercher/maroto/v2/mocks"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 )
 
 func TestNewText(t *testing.T) {
@@ -35,8 +36,10 @@ func TestGetLinesHeight(t *testing.T) {
 		font.EXPECT().SetFont(textProp.Family, textProp.Style, textProp.Size)
 
 		pdf := mocks.NewGopdf(t)
+		pdf.EXPECT().GetStringWidth("text text text text").Return(22.0)
 		pdf.EXPECT().GetStringWidth("text").Return(5.0)  // First token just returns text
 		pdf.EXPECT().GetStringWidth(" text").Return(6.0) // subsequent tokens return leading space
+		pdf.EXPECT().GetStringWidth("text text").Return(11.0)
 
 		text := gopdf.NewText(pdf, mocks.NewMath(t), font)
 
@@ -54,15 +57,165 @@ func TestGetLinesHeight(t *testing.T) {
 		font.EXPECT().SetFont(textProp.Family, textProp.Style, textProp.Size)
 
 		pdf := mocks.NewGopdf(t)
+		pdf.EXPECT().GetStringWidth("tttt tttt tttt tttt").Return(12)
 		pdf.EXPECT().GetStringWidth("t").Return(1)
 		pdf.EXPECT().GetStringWidth(" ").Return(1)
 		pdf.EXPECT().GetStringWidth(" - ").Return(1)
+		pdf.EXPECT().GetStringWidth("tttt tttt -").Return(10)
+		pdf.EXPECT().GetStringWidth("tttt tttt").Return(9)
 
 		text := gopdf.NewText(pdf, mocks.NewMath(t), font)
 
 		height := text.GetLinesQuantity("tttt tttt tttt tttt", textProp, 11)
 
 		assert.Equal(t, 2, height)
+	})
+
+	t.Run("when accented text of a built-in font occupies two lines with CharacterStrategy, should measure each rune", func(t *testing.T) {
+		t.Parallel()
+		textProp := &props.Text{BreakLineStrategy: breakline.CharacterStrategy}
+		textProp.MakeValid(&props.Font{Family: fontfamily.Arial, Size: 10, Style: fontstyle.Normal})
+
+		font := mocks.NewFont(t)
+		font.EXPECT().SetFont(textProp.Family, textProp.Style, textProp.Size)
+
+		pdf := mocks.NewGopdf(t)
+		pdf.EXPECT().GetStringWidth("ääää").Return(12.0)
+		pdf.EXPECT().GetStringWidth("ä").Return(3.0).Times(4)
+		pdf.EXPECT().GetStringWidth("ää").Return(6.0).Twice()
+
+		text := gopdf.NewText(pdf, mocks.NewMath(t), font)
+
+		height := text.GetLinesQuantity("ääää", textProp, 6)
+
+		assert.Equal(t, 2, height)
+	})
+
+	t.Run("when utf-8 text occupies two lines with CharacterStrategy, should measure each rune", func(t *testing.T) {
+		t.Parallel()
+		textProp := &props.Text{BreakLineStrategy: breakline.CharacterStrategy}
+		textProp.MakeValid(&props.Font{Family: "custom", Size: 10, Style: fontstyle.Normal})
+
+		font := mocks.NewFont(t)
+		font.EXPECT().SetFont(textProp.Family, textProp.Style, textProp.Size)
+
+		pdf := mocks.NewGopdf(t)
+		pdf.EXPECT().GetStringWidth("їїїї").Return(12.0)
+		pdf.EXPECT().GetStringWidth("ї").Return(3.0).Times(4)
+		pdf.EXPECT().GetStringWidth("її").Return(6.0).Twice()
+
+		text := gopdf.NewText(pdf, mocks.NewMath(t), font)
+
+		height := text.GetLinesQuantity("їїїї", textProp, 6)
+
+		assert.Equal(t, 2, height)
+	})
+
+	t.Run("when text is blank with CharacterStrategy, should return one line as rendered", func(t *testing.T) {
+		t.Parallel()
+		for _, blank := range []string{"", " "} {
+			textProp := &props.Text{BreakLineStrategy: breakline.CharacterStrategy, VerticalPadding: 10}
+			textProp.MakeValid(&props.Font{Family: "custom", Size: 10, Style: fontstyle.Normal})
+
+			font := mocks.NewFont(t)
+			font.EXPECT().SetFont(textProp.Family, textProp.Style, textProp.Size)
+
+			pdf := mocks.NewGopdf(t)
+			pdf.EXPECT().GetStringWidth("").Return(0.0).Maybe()
+			pdf.EXPECT().GetStringWidth(" ").Return(1.0).Maybe()
+
+			text := gopdf.NewText(pdf, mocks.NewMath(t), font)
+
+			height := text.GetLinesQuantity(blank, textProp, 6)
+
+			assert.Equal(t, 1, height, "text %q", blank)
+		}
+	})
+
+	t.Run("when a space-only paragraph does not fit a zero width, should keep it as an empty line", func(t *testing.T) {
+		t.Parallel()
+		for _, strategy := range []breakline.Strategy{breakline.EmptySpaceStrategy, breakline.CharacterStrategy} {
+			textProp := &props.Text{PreserveLineBreaks: true, BreakLineStrategy: strategy}
+			textProp.MakeValid(&props.Font{Family: "custom", Size: 10, Style: fontstyle.Normal})
+
+			font := mocks.NewFont(t)
+			font.EXPECT().SetFont(textProp.Family, textProp.Style, textProp.Size)
+
+			pdf := mocks.NewGopdf(t)
+			pdf.EXPECT().GetStringWidth("A").Return(5.0)
+			pdf.EXPECT().GetStringWidth(" ").Return(1.0)
+			pdf.EXPECT().GetStringWidth("B").Return(5.0)
+
+			text := gopdf.NewText(pdf, mocks.NewMath(t), font)
+
+			height := text.GetLinesQuantity("A\n \nB", textProp, 0)
+
+			assert.Equal(t, 3, height, "strategy %s", strategy)
+		}
+	})
+
+	t.Run("when LF, CRLF or CR line breaks are counted, should depend on PreserveLineBreaks", func(t *testing.T) {
+		t.Parallel()
+		for _, value := range []string{"A\nB", "A\r\nB", "A\rB"} {
+			for preserve, expected := range map[bool]int{true: 2, false: 1} {
+				textProp := &props.Text{PreserveLineBreaks: preserve}
+				textProp.MakeValid(&props.Font{Family: "custom", Size: 10, Style: fontstyle.Normal})
+
+				font := mocks.NewFont(t)
+				font.EXPECT().SetFont(textProp.Family, textProp.Style, textProp.Size)
+
+				pdf := mocks.NewGopdf(t)
+				pdf.EXPECT().GetStringWidth("A").Return(5.0).Maybe()
+				pdf.EXPECT().GetStringWidth("B").Return(5.0).Maybe()
+				pdf.EXPECT().GetStringWidth("A B").Return(12.0).Maybe()
+
+				text := gopdf.NewText(pdf, mocks.NewMath(t), font)
+
+				height := text.GetLinesQuantity(value, textProp, 100)
+
+				assert.Equal(t, expected, height, "text %q, preserve %t", value, preserve)
+			}
+		}
+	})
+
+	t.Run("when a text contains explicit empty lines, should count each paragraph break", func(t *testing.T) {
+		t.Parallel()
+		textProp := &props.Text{PreserveLineBreaks: true}
+		textProp.MakeValid(&props.Font{Family: fontfamily.Arial, Size: 10, Style: fontstyle.Normal})
+
+		font := mocks.NewFont(t)
+		font.EXPECT().SetFont(textProp.Family, textProp.Style, textProp.Size)
+
+		pdf := mocks.NewGopdf(t)
+		pdf.EXPECT().GetStringWidth("line one").Return(20.0)
+		pdf.EXPECT().GetStringWidth("").Return(0.0)
+		pdf.EXPECT().GetStringWidth("line two").Return(20.0)
+
+		text := gopdf.NewText(pdf, mocks.NewMath(t), font)
+
+		height := text.GetLinesQuantity("line one\n\nline two", textProp, 100)
+
+		assert.Equal(t, 3, height)
+	})
+
+	t.Run("when margins exceed the column width, should count lines as rendered with zero width", func(t *testing.T) {
+		t.Parallel()
+		textProp := &props.Text{PreserveLineBreaks: true}
+		textProp.MakeValid(&props.Font{Family: fontfamily.Arial, Size: 10, Style: fontstyle.Normal})
+
+		font := mocks.NewFont(t)
+		font.EXPECT().SetFont(textProp.Family, textProp.Style, textProp.Size)
+
+		pdf := mocks.NewGopdf(t)
+		pdf.EXPECT().GetStringWidth("A").Return(5.0)
+		pdf.EXPECT().GetStringWidth("").Return(0.0)
+		pdf.EXPECT().GetStringWidth("B").Return(5.0)
+
+		text := gopdf.NewText(pdf, mocks.NewMath(t), font)
+
+		height := text.GetLinesQuantity("A\n\nB", textProp, -2)
+
+		assert.Equal(t, 3, height)
 	})
 }
 
@@ -264,6 +417,47 @@ func TestText_Add(t *testing.T) {
 		// Act
 		sut.Add("hello world", cell, textProp)
 	})
+	t.Run("when a justified hyperlink text has an empty line, should not link the empty line", func(t *testing.T) {
+		t.Parallel()
+		// Arrange
+		url := "https://example.com"
+		cell := &entity.Cell{X: 40, Y: 0, Width: 60, Height: 50}
+		textProp := &props.Text{
+			Family:             "custom",
+			Style:              fontstyle.Normal,
+			Size:               10,
+			Align:              align.Justify,
+			PreserveLineBreaks: true,
+			Hyperlink:          &url,
+		}
+
+		font := mocks.NewFont(t)
+		font.EXPECT().SetFont("custom", fontstyle.Normal, 10.0)
+		font.EXPECT().GetHeight("custom", fontstyle.Normal, 10.0).Return(5.0)
+		font.EXPECT().GetColor().Return(&props.BlackColor)
+		font.EXPECT().SetColor(&props.BlueColor)
+		font.EXPECT().SetColor(&props.BlackColor)
+
+		pdf := mocks.NewGopdf(t)
+		pdf.EXPECT().GetStringWidth("A").Return(5.0)
+		pdf.EXPECT().GetStringWidth("").Return(0.0)
+		pdf.EXPECT().GetStringWidth("B").Return(5.0)
+		pdf.EXPECT().GetStringWidth(" ").Return(2.0)
+		pdf.EXPECT().GetMargins().Return(0.0, 0.0, 0.0, 0.0)
+		pdf.EXPECT().Text(40.0, 5.0, "A").Once()
+		pdf.EXPECT().Text(40.0, 15.0, "B").Once()
+		linkWidths := []float64{}
+		pdf.EXPECT().LinkString(40.0, mock.Anything, mock.Anything, 5.0, url).
+			Run(func(_, _, w, _ float64, _ string) { linkWidths = append(linkWidths, w) })
+
+		sut := gopdf.NewText(pdf, mocks.NewMath(t), font)
+
+		// Act
+		sut.Add("A\n\nB", cell, textProp)
+
+		// Assert
+		assert.Equal(t, []float64{5, 5}, linkWidths)
+	})
 	t.Run("when text exceeds cell width with empty space strategy, should split into multiple lines", func(t *testing.T) {
 		t.Parallel()
 		// Arrange
@@ -343,6 +537,147 @@ func TestText_Add(t *testing.T) {
 
 		// Act
 		sut.Add("ab", cell, textProp)
+	})
+	t.Run("when character strategy text is wider than an empty column, should not render an empty line first", func(t *testing.T) {
+		t.Parallel()
+		cell := &entity.Cell{X: 0, Y: 0, Width: 0, Height: 100}
+		originalColor := &props.Color{Red: 0, Green: 0, Blue: 0}
+		textProp := &props.Text{
+			Family:            fontfamily.Arial,
+			Style:             fontstyle.Normal,
+			Size:              10,
+			Align:             align.Left,
+			BreakLineStrategy: breakline.CharacterStrategy,
+		}
+
+		font := mocks.NewFont(t)
+		font.EXPECT().SetFont(fontfamily.Arial, fontstyle.Normal, 10.0)
+		font.EXPECT().GetHeight(fontfamily.Arial, fontstyle.Normal, 10.0).Return(5.0)
+		font.EXPECT().GetColor().Return(originalColor)
+		font.EXPECT().SetColor(originalColor)
+
+		pdf := mocks.NewGopdf(t)
+		pdf.EXPECT().GetStringWidth("a").Return(5.0).Times(3)
+		pdf.EXPECT().GetMargins().Return(0.0, 0.0, 0.0, 0.0)
+		pdf.EXPECT().Text(0.0, 5.0, "a")
+
+		sut := gopdf.NewText(pdf, mocks.NewMath(t), font)
+
+		sut.Add("a", cell, textProp)
+	})
+	t.Run("when character strategy wraps accented text of a built-in font, should keep whole runes", func(t *testing.T) {
+		t.Parallel()
+		cell := &entity.Cell{X: 0, Y: 0, Width: 6, Height: 100}
+		originalColor := &props.Color{Red: 0, Green: 0, Blue: 0}
+		textProp := &props.Text{
+			Family:            fontfamily.Arial,
+			Style:             fontstyle.Normal,
+			Size:              10,
+			Align:             align.Left,
+			BreakLineStrategy: breakline.CharacterStrategy,
+		}
+
+		font := mocks.NewFont(t)
+		font.EXPECT().SetFont(fontfamily.Arial, fontstyle.Normal, 10.0)
+		font.EXPECT().GetHeight(fontfamily.Arial, fontstyle.Normal, 10.0).Return(5.0)
+		font.EXPECT().GetColor().Return(originalColor)
+		font.EXPECT().SetColor(originalColor)
+
+		pdf := mocks.NewGopdf(t)
+		pdf.EXPECT().GetStringWidth("éé").Return(8.0)
+		pdf.EXPECT().GetStringWidth("é").Return(4.0).Times(4)
+		pdf.EXPECT().GetMargins().Return(0.0, 0.0, 0.0, 0.0)
+		pdf.EXPECT().Text(0.0, 5.0, "é")
+		pdf.EXPECT().Text(0.0, 10.0, "é")
+
+		sut := gopdf.NewText(pdf, mocks.NewMath(t), font)
+
+		sut.Add("éé", cell, textProp)
+	})
+	t.Run("when text contains explicit empty lines, should preserve paragraph gaps", func(t *testing.T) {
+		t.Parallel()
+		// Arrange
+		cell := &entity.Cell{X: 0, Y: 0, Width: 100, Height: 100}
+		originalColor := &props.Color{Red: 0, Green: 0, Blue: 0}
+		textProp := &props.Text{
+			Family:             fontfamily.Arial,
+			Style:              fontstyle.Normal,
+			Size:               10,
+			Align:              align.Left,
+			PreserveLineBreaks: true,
+		}
+
+		font := mocks.NewFont(t)
+		font.EXPECT().SetFont(fontfamily.Arial, fontstyle.Normal, 10.0)
+		font.EXPECT().GetHeight(fontfamily.Arial, fontstyle.Normal, 10.0).Return(5.0)
+		font.EXPECT().GetColor().Return(originalColor)
+		font.EXPECT().SetColor(originalColor)
+
+		pdf := mocks.NewGopdf(t)
+		pdf.EXPECT().GetStringWidth("first").Return(20.0)
+		pdf.EXPECT().GetStringWidth("").Return(0.0)
+		pdf.EXPECT().GetStringWidth("third").Return(20.0)
+		pdf.EXPECT().GetMargins().Return(0.0, 0.0, 0.0, 0.0)
+		pdf.EXPECT().Text(0.0, 5.0, "first")
+		pdf.EXPECT().GetMargins().Return(0.0, 0.0, 0.0, 0.0)
+		pdf.EXPECT().Text(0.0, 10.0, "")
+		pdf.EXPECT().GetMargins().Return(0.0, 0.0, 0.0, 0.0)
+		pdf.EXPECT().Text(0.0, 15.0, "third")
+
+		sut := gopdf.NewText(pdf, mocks.NewMath(t), font)
+
+		// Act
+		sut.Add("first\n\nthird", cell, textProp)
+	})
+	t.Run("when line breaks are preserved, should render LF, CRLF and CR as one break each", func(t *testing.T) {
+		t.Parallel()
+		for _, value := range []string{"A\nB", "A\r\nB", "A\rB"} {
+			// Arrange
+			cell := &entity.Cell{X: 0, Y: 0, Width: 100, Height: 100}
+			textProp := &props.Text{Family: "custom", Style: fontstyle.Normal, Size: 10, Align: align.Left, PreserveLineBreaks: true}
+
+			font := mocks.NewFont(t)
+			font.EXPECT().SetFont("custom", fontstyle.Normal, 10.0)
+			font.EXPECT().GetHeight("custom", fontstyle.Normal, 10.0).Return(5.0)
+			font.EXPECT().GetColor().Return(&props.BlackColor)
+			font.EXPECT().SetColor(&props.BlackColor)
+
+			pdf := mocks.NewGopdf(t)
+			pdf.EXPECT().GetStringWidth("A").Return(5.0)
+			pdf.EXPECT().GetStringWidth("B").Return(5.0)
+			pdf.EXPECT().GetMargins().Return(0.0, 0.0, 0.0, 0.0)
+			pdf.EXPECT().Text(0.0, 5.0, "A").Once()
+			pdf.EXPECT().Text(0.0, 10.0, "B").Once()
+
+			sut := gopdf.NewText(pdf, mocks.NewMath(t), font)
+
+			// Act
+			sut.Add(value, cell, textProp)
+		}
+	})
+	t.Run("when line breaks are not preserved, should render LF, CRLF and CR as a space", func(t *testing.T) {
+		t.Parallel()
+		for _, value := range []string{"A\nB", "A\r\nB", "A\rB"} {
+			// Arrange
+			cell := &entity.Cell{X: 0, Y: 0, Width: 100, Height: 100}
+			textProp := &props.Text{Family: "custom", Style: fontstyle.Normal, Size: 10, Align: align.Left}
+
+			font := mocks.NewFont(t)
+			font.EXPECT().SetFont("custom", fontstyle.Normal, 10.0)
+			font.EXPECT().GetHeight("custom", fontstyle.Normal, 10.0).Return(5.0)
+			font.EXPECT().GetColor().Return(&props.BlackColor)
+			font.EXPECT().SetColor(&props.BlackColor)
+
+			pdf := mocks.NewGopdf(t)
+			pdf.EXPECT().GetStringWidth("A B").Return(12.0)
+			pdf.EXPECT().GetMargins().Return(0.0, 0.0, 0.0, 0.0)
+			pdf.EXPECT().Text(0.0, 5.0, "A B").Once()
+
+			sut := gopdf.NewText(pdf, mocks.NewMath(t), font)
+
+			// Act
+			sut.Add(value, cell, textProp)
+		}
 	})
 	t.Run("when top exceeds cell height, should clamp top to cell height", func(t *testing.T) {
 		t.Parallel()

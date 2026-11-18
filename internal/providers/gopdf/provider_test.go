@@ -78,6 +78,51 @@ func TestProvider_GetTextHeight(t *testing.T) {
 	assert.Equal(t, fontHeightToReturn, fontHeight)
 }
 
+func TestProvider_GetStringWidth(t *testing.T) {
+	t.Parallel()
+	t.Run("when font is a built-in font, should measure the utf-8 text as is", func(t *testing.T) {
+		t.Parallel()
+		// Arrange
+		textWidthToReturn := 10.0
+		prop := fixture.FontProp()
+
+		font := mocks.NewFont(t)
+		font.EXPECT().SetFont(prop.Family, prop.Style, prop.Size)
+
+		fpdf := mocks.NewGopdf(t)
+		fpdf.EXPECT().GetStringWidth("café").Return(textWidthToReturn)
+
+		sut := gopdf.New(&gopdf.Dependencies{Fpdf: fpdf, Font: font})
+
+		// Act
+		textWidth := sut.GetStringWidth("café", &prop)
+
+		// Assert
+		assert.Equal(t, textWidthToReturn, textWidth)
+	})
+	t.Run("when font is a custom utf-8 font, should measure the text as is", func(t *testing.T) {
+		t.Parallel()
+		// Arrange
+		textWidthToReturn := 10.0
+		prop := fixture.FontProp()
+		prop.Family = "custom"
+
+		font := mocks.NewFont(t)
+		font.EXPECT().SetFont(prop.Family, prop.Style, prop.Size)
+
+		fpdf := mocks.NewGopdf(t)
+		fpdf.EXPECT().GetStringWidth("café").Return(textWidthToReturn)
+
+		sut := gopdf.New(&gopdf.Dependencies{Fpdf: fpdf, Font: font})
+
+		// Act
+		textWidth := sut.GetStringWidth("café", &prop)
+
+		// Assert
+		assert.Equal(t, textWidthToReturn, textWidth)
+	})
+}
+
 func TestProvider_AddLine(t *testing.T) {
 	t.Parallel()
 	// Arrange

@@ -60,6 +60,8 @@ type Gopdf interface {
 	Line(x1, y1, x2, y2 float64)
 	Rect(x, y, w, h float64, style string)
 	Image(img []byte, x, y, w, h float64, flow bool) error
+	Rotate(angle, x, y float64)
+	RotateReset()
 
 	SetCompression(compress bool)
 	SetProtection(protection *entity.Protection)
@@ -370,6 +372,18 @@ func (d *document) Image(img []byte, x, y, w, h float64, flow bool) error {
 	}
 
 	return nil
+}
+
+// Rotate rotates what is drawn next counter-clockwise by angle degrees around x, y,
+// until RotateReset is called.
+func (d *document) Rotate(angle, x, y float64) {
+	d.drawn = true
+	d.pdf.Rotate(angle, x, y)
+}
+
+// RotateReset ends the rotation started by Rotate.
+func (d *document) RotateReset() {
+	d.pdf.RotateReset()
 }
 
 // SetCompression enables or disables the compression of the content streams.

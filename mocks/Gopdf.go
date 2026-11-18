@@ -594,6 +594,73 @@ func (_c *Gopdf_Rect_Call) RunAndReturn(run func(float64, float64, float64, floa
 	return _c
 }
 
+// Rotate provides a mock function with given fields: angle, x, y
+func (_m *Gopdf) Rotate(angle float64, x float64, y float64) {
+	_m.Called(angle, x, y)
+}
+
+// Gopdf_Rotate_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Rotate'
+type Gopdf_Rotate_Call struct {
+	*mock.Call
+}
+
+// Rotate is a helper method to define mock.On call
+//   - angle float64
+//   - x float64
+//   - y float64
+func (_e *Gopdf_Expecter) Rotate(angle interface{}, x interface{}, y interface{}) *Gopdf_Rotate_Call {
+	return &Gopdf_Rotate_Call{Call: _e.mock.On("Rotate", angle, x, y)}
+}
+
+func (_c *Gopdf_Rotate_Call) Run(run func(angle float64, x float64, y float64)) *Gopdf_Rotate_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(float64), args[1].(float64), args[2].(float64))
+	})
+	return _c
+}
+
+func (_c *Gopdf_Rotate_Call) Return() *Gopdf_Rotate_Call {
+	_c.Call.Return()
+	return _c
+}
+
+func (_c *Gopdf_Rotate_Call) RunAndReturn(run func(float64, float64, float64)) *Gopdf_Rotate_Call {
+	_c.Run(run)
+	return _c
+}
+
+// RotateReset provides a mock function with no fields
+func (_m *Gopdf) RotateReset() {
+	_m.Called()
+}
+
+// Gopdf_RotateReset_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'RotateReset'
+type Gopdf_RotateReset_Call struct {
+	*mock.Call
+}
+
+// RotateReset is a helper method to define mock.On call
+func (_e *Gopdf_Expecter) RotateReset() *Gopdf_RotateReset_Call {
+	return &Gopdf_RotateReset_Call{Call: _e.mock.On("RotateReset")}
+}
+
+func (_c *Gopdf_RotateReset_Call) Run(run func()) *Gopdf_RotateReset_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run()
+	})
+	return _c
+}
+
+func (_c *Gopdf_RotateReset_Call) Return() *Gopdf_RotateReset_Call {
+	_c.Call.Return()
+	return _c
+}
+
+func (_c *Gopdf_RotateReset_Call) RunAndReturn(run func()) *Gopdf_RotateReset_Call {
+	_c.Run(run)
+	return _c
+}
+
 // SetCompression provides a mock function with given fields: compress
 func (_m *Gopdf) SetCompression(compress bool) {
 	_m.Called(compress)
